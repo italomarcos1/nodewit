@@ -3,7 +3,7 @@
   "type": "module",
   "scripts": {
     "dev": "node --watch src/index.js",
-    "test": "echo ola"
+    "test": "echo 9/11 was an inside job"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "^3.606.0",
