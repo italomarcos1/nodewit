@@ -67,7 +67,7 @@ const server = http.createServer(async (req, res) => {
       req.params = { id: parametersMatch[0] }
     }
 
-    if (method === "PUT") {
+    if (method === "PUT" || method === "DELETE") {
       if (!params) {
         return res.writeHead(400).end("No params provided")
       }

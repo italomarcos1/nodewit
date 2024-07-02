@@ -15,6 +15,9 @@ import { CreateUserService } from "../services/users/CreateUserService.js";
 import { FetchUsersService } from "../services/users/FetchUsersService.js";
 import { AuthenticateUserService } from "../services/users/AuthenticateUserService.js";
 import { z, ZodError } from "zod";
+import { NoParamsProvidedError } from "../errors/index.js";
+import { DeleteUserService } from "../services/users/DeleteUserService.js";
+import { UpdateUserService } from "../services/users/UpdateUserService.js";
 
 let dbClient;
 
@@ -43,7 +46,6 @@ const getUsers = async (_, res) => {
 const createUser = async (req, res) => {
   try {
     const { parsedBody } = await getRequestBody(req);
-    // const { name, job, email, password } = parsedBody;
 
     const createUserBodySchema = z.object({
       name: z.string(),
@@ -63,6 +65,94 @@ const createUser = async (req, res) => {
     await createUserService.execute({
       name, job, email, password
     })
+
+    return res.setHeader("Content-Type", "application/json").writeHead(201).end()
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res
+        .setHeader("Content-Type", "application/json")
+        .writeHead(400)
+        .end(JSON.stringify({
+          statusCode: 400,
+          message: JSON.parse(err.message)
+        }));
+    }
+
+    return res
+      .setHeader("Content-Type", "application/json")
+      .writeHead(err.statusCode || 500)
+      .end(JSON.stringify({
+        statusCode: err.statusCode || 500,
+        message: err.message
+      }));
+  }
+}
+
+const updateUser = async (req, res) => {
+  try {
+    const { parsedBody } = await getRequestBody(req);
+
+    if (!req.params || !req.params.id)
+      throw new NoParamsProvidedError()
+  
+    const id = req.params.id;
+
+    const updateUserBodySchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id: user_id } = updateUserBodySchema.parse({ id })
+    
+    if (!dbClient)
+      dbClient = await dbConnection()
+
+    const usersRepository = new UsersDbRepository(dbClient);
+    const updateUserService = new UpdateUserService(usersRepository)
+
+    await updateUserService.execute({ data: parsedBody, user_id })
+
+    return res.setHeader("Content-Type", "application/json").writeHead(201).end()
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res
+        .setHeader("Content-Type", "application/json")
+        .writeHead(400)
+        .end(JSON.stringify({
+          statusCode: 400,
+          message: JSON.parse(err.message)
+        }));
+    }
+
+    return res
+      .setHeader("Content-Type", "application/json")
+      .writeHead(err.statusCode || 500)
+      .end(JSON.stringify({
+        statusCode: err.statusCode || 500,
+        message: err.message
+      }));
+  }
+}
+
+const deleteUser = async (req, res) => {
+  try {
+    if (!req.params || !req.params.id)
+      throw new NoParamsProvidedError()
+  
+    const id = req.params.id;
+
+    const deleteUserBodySchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id: user_id } = deleteUserBodySchema.parse({ id })
+    
+    if (!dbClient)
+      dbClient = await dbConnection()
+
+    const usersRepository = new UsersDbRepository(dbClient);
+    const deleteUserService = new DeleteUserService(usersRepository)
+
+    await deleteUserService.execute(user_id)
 
     return res.setHeader("Content-Type", "application/json").writeHead(201).end()
   } catch (err) {
@@ -183,6 +273,12 @@ export const usersController = {
   },
   "POST/users": {
     handler: createUser
+  },
+  "PUT/users": {
+    handler: updateUser
+  },
+  "DELETE/users": {
+    handler: deleteUser
   },
   "POST/session": {
     handler: signInUser

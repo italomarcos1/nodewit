@@ -1,3 +1,5 @@
+import { concatUpdateQueryValues } from "../../utils/concatUpdateQueryValues.js";
+
 export class BoardsDbRepository {
   dbClient;
 
@@ -59,10 +61,9 @@ export class BoardsDbRepository {
     return data.rows;
   }
 
-  // TODO: query horrorosa
   async findById(board_id) {
     const { rows, rowCount } = await this.dbClient.query(`
-      SELECT * FROM users WHERE id = '${board_id}';
+      SELECT * FROM boards WHERE id = '${board_id}';
     `)
 
     if (!rowCount)
@@ -94,5 +95,28 @@ export class BoardsDbRepository {
     };
     
     return board;
+  }
+
+  async updateBoard({ data, board_id }) {
+    const query = concatUpdateQueryValues(data)
+    
+    const { rowCount } = await this.dbClient.query(`
+      UPDATE boards
+      SET ${query}
+      WHERE
+        id = '${board_id}';
+    `);
+
+    return !!rowCount;
+  }
+
+  async deleteBoard(board_id) {
+    const { rowCount } = await this.dbClient.query(`
+      DELETE FROM boards
+      WHERE
+        id = '${board_id}';
+    `);
+
+    return !!rowCount; 
   }
 }

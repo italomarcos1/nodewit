@@ -1,3 +1,5 @@
+import { concatUpdateQueryValues } from "../../utils/concatUpdateQueryValues.js";
+
 export class CardsDbRepository {
   dbClient;
 
@@ -21,6 +23,19 @@ export class CardsDbRepository {
     `);
 
     return data.rows;
+  }
+
+  async findById(card_id) {
+    const { rows, rowCount } = await this.dbClient.query(`
+      SELECT * FROM cards WHERE id = '${card_id}';
+    `)
+
+    if (!rowCount)
+      return null;
+
+    const card = rows[0];
+
+    return card;
   }
 
   async findManyByBoardId(board_id) {
@@ -78,5 +93,28 @@ export class CardsDbRepository {
     };
 
     return card;
+  }
+
+  async updateCard({ data, card_id }) {
+    const query = concatUpdateQueryValues(data)
+    
+    const { rowCount } = await this.dbClient.query(`
+      UPDATE cards
+      SET ${query}
+      WHERE
+        id = '${card_id}';
+    `);
+
+    return !!rowCount;
+  }
+
+  async deleteCard(card_id) {
+    const { rowCount } = await this.dbClient.query(`
+      DELETE FROM cards
+      WHERE
+        id = '${card_id}';
+    `);
+
+    return !!rowCount; 
   }
 }

@@ -36,3 +36,15 @@ export class NoParamsProvidedError extends BaseError {
     this.statusCode = 400;
   }
 }
+
+export class ResourceNotFoundError extends Error {
+  constructor() {
+    super("Resource not found.")
+  }
+}
+
+export class ForbiddenActionError extends Error {
+  constructor() {
+    super("Forbidden action.")
+  }
+}

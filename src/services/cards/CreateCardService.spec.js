@@ -12,6 +12,11 @@ describe("create card", () => {
   })
 
   it("should create card", async () => {
-    expect(2).toBe(2)
+    const { card } = await sut.execute({
+      title: "teste",
+      description: "teste 123"
+    });
+
+    expect(card.id).toStrictEqual(expect.any(String))
   })
 })

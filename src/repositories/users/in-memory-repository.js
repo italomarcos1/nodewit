@@ -42,4 +42,26 @@ export class UsersInMemoryRepository {
 
     return user;
   }
+  
+  async updateUser({ data, user_id }) {
+    const userIndex = this.users.findIndex(u => u.id === user_id);
+    
+    if (userIndex < 0)
+      return null;
+
+    this.users = this.users.map(u => u.id === user_id ? ({...u, ...data}) : u) 
+
+    return true;
+  }
+
+  async deleteUser(user_id) {
+    const user = this.users.find(u => u.id === user_id);
+    
+    if (!user)
+      return null;
+
+    this.users.filter(u => u.id !== user_id)
+
+    return true; 
+  }
 }

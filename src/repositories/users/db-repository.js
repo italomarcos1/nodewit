@@ -1,3 +1,5 @@
+import { concatUpdateQueryValues } from "../../utils/concatUpdateQueryValues.js";
+
 export class UsersDbRepository {
   dbClient;
 
@@ -46,5 +48,28 @@ export class UsersDbRepository {
       VALUES
         ('${name}', '${email}', '${password_hash}', '${job}');  
     `);
+  }
+
+  async updateUser({ data, user_id }) {
+    const query = concatUpdateQueryValues(data)
+    
+    const { rowCount } = await this.dbClient.query(`
+      UPDATE users
+      SET ${query}
+      WHERE
+        id = '${user_id}';
+    `);
+
+    return !!rowCount;
+  }
+
+  async deleteUser(user_id) {
+    const { rowCount } = await this.dbClient.query(`
+      DELETE FROM users
+      WHERE
+        id = '${user_id}';
+    `);
+
+    return !!rowCount; 
   }
 }

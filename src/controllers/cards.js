@@ -8,6 +8,8 @@ import { FetchCardsByUserIdService } from "../services/cards/FetchCardsByUserIdS
 import { FetchCardsService } from "../services/cards/FetchCardsService.js";
 import { getRequestBody } from "../utils/getRequestBody.js"
 import { NoParamsProvidedError } from "../errors/index.js";
+import { UpdateCardService } from "../services/cards/UpdateCardService.js";
+import { DeleteCardService } from "../services/cards/DeleteCardService.js";
 
 let dbClient;
 
@@ -124,6 +126,94 @@ const createCard = async (req, res, broadcast) => {
   }
 }
 
+const updateCard = async (req, res) => {
+  try {
+    const { parsedBody } = await getRequestBody(req);
+
+    if (!req.params || !req.params.id)
+      throw new NoParamsProvidedError()
+  
+    const id = req.params.id;
+
+    const updateCardBodySchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id: card_id } = updateCardBodySchema.parse({ id })
+    
+    if (!dbClient)
+      dbClient = await dbConnection()
+
+    const CardsRepository = new CardsDbRepository(dbClient);
+    const updateCardService = new UpdateCardService(CardsRepository)
+
+    await updateCardService.execute({ data: parsedBody, card_id })
+
+    return res.setHeader("Content-Type", "application/json").writeHead(201).end()
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res
+        .setHeader("Content-Type", "application/json")
+        .writeHead(400)
+        .end(JSON.stringify({
+          statusCode: 400,
+          message: JSON.parse(err.message)
+        }));
+    }
+
+    return res
+      .setHeader("Content-Type", "application/json")
+      .writeHead(err.statusCode || 500)
+      .end(JSON.stringify({
+        statusCode: err.statusCode || 500,
+        message: err.message
+      }));
+  }
+}
+
+const deleteCard = async (req, res) => {
+  try {
+    if (!req.params || !req.params.id)
+      throw new NoParamsProvidedError()
+  
+    const id = req.params.id;
+
+    const deleteCardBodySchema = z.object({
+      id: z.string().uuid(),
+    })
+
+    const { id: card_id } = deleteCardBodySchema.parse({ id })
+    
+    if (!dbClient)
+      dbClient = await dbConnection()
+
+    const CardsRepository = new CardsDbRepository(dbClient);
+    const deleteCardService = new DeleteCardService(CardsRepository)
+
+    await deleteCardService.execute(card_id)
+
+    return res.setHeader("Content-Type", "application/json").writeHead(201).end()
+  } catch (err) {
+    if (err instanceof ZodError) {
+      return res
+        .setHeader("Content-Type", "application/json")
+        .writeHead(400)
+        .end(JSON.stringify({
+          statusCode: 400,
+          message: JSON.parse(err.message)
+        }));
+    }
+
+    return res
+      .setHeader("Content-Type", "application/json")
+      .writeHead(err.statusCode || 500)
+      .end(JSON.stringify({
+        statusCode: err.statusCode || 500,
+        message: err.message
+      }));
+  }
+}
+
 export const cardsController = {
   "GET/cards": {
     protected: true,
@@ -132,6 +222,12 @@ export const cardsController = {
   "POST/cards": {
     protected: true,
     handler: createCard
+  },
+  "PUT/cards": {
+    handler: updateCard
+  },
+  "DELETE/cards": {
+    handler: deleteCard
   },
   "GET/cards_by_user": {
     protected: true,
