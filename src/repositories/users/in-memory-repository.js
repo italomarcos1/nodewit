@@ -8,7 +8,7 @@ export class UsersInMemoryRepository {
   }
 
   async findMany() {
-    return this.users();
+    return this.users;
   }
 
   async findById(user_id) {

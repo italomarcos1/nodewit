@@ -29,3 +29,10 @@ export class UserAlreadyExistsError extends BaseError {
     this.statusCode = 400;
   }
 }
+
+export class NoParamsProvidedError extends BaseError {
+  constructor() {
+    super("No params provided")
+    this.statusCode = 400;
+  }
+}

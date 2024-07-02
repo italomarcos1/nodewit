@@ -43,7 +43,7 @@ const routes = {
 
 const server = http.createServer(async (req, res) => {
   dbClient = await dbConnection()
-  const { method, url } = req;
+  const { method, url: fullURL } = req;
   
   res.setHeader("Access-Control-Allow-Origin", "http://localhost:5173");
   res.setHeader("Access-Control-Allow-Methods", "GET, POST, PUT, DELETE, OPTIONS");
@@ -53,9 +53,33 @@ const server = http.createServer(async (req, res) => {
     return res.writeHead(204).end()
   }
 
-  const endpoint = routes[method+url];
-  
+  const [url, params] = `${fullURL.replace("/","")}`.split("/")
+  const endpoint = routes[method+`/${url}`];
+
   if (endpoint) {
+    if (method === "GET" && !!params) {
+      const parametersMatch = params.match(/\b[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}\b/)
+      
+      if (!parametersMatch) {
+        return res.writeHead(400).end("URL malformed")
+      }
+      
+      req.params = { id: parametersMatch[0] }
+    }
+
+    if (method === "PUT") {
+      if (!params) {
+        return res.writeHead(400).end("No params provided")
+      }
+      const parametersMatch = params.match(/\b[0-9a-fA-F]{8}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{4}\b-[0-9a-fA-F]{12}\b/)
+      
+      if (!parametersMatch) {
+        return res.writeHead(400).end("URL malformed")
+      }
+      
+      req.params = { id: parametersMatch[0] }
+    }
+    
     try {
       // if (endpoint.protected)
         // authMiddleware(req)
