@@ -8,15 +8,16 @@ export class BoardsDbRepository {
   }
 
   async findMany() {
-    const data = await dbClient.query(`
+    const data = await this.dbClient.query(`
       SELECT 
         boards.id, 
         boards.title, 
-        boards.priority, 
         boards.created_at, 
-        board_owner.id AS owner_id, 
-        board_owner.name AS owner_name, 
-        board_owner.profile_picture AS owner_profile_picture,
+        json_build_object(
+          'id', board_owner.id,
+          'name', board_owner.name,
+          'profile_picture', board_owner.profile_picture
+        ) AS owner,
         COALESCE(cards_data.cards, '[]') AS cards
       FROM 
         boards
@@ -29,32 +30,40 @@ export class BoardsDbRepository {
               'id', cards.id,
               'title', cards.title,
               'description', cards.description,
-              'owner_id', card_owner.id,
-              'owner_name', card_owner.name,
-              'owner_profile_picture', card_owner.profile_picture,
+              'deadline', cards.deadline,
+              'top_priority', cards.top_priority,
+              'picture', cards.picture,
+              'created_at', cards.created_at,
+              'board_id', cards.board_id,
+              'owner', json_build_object(
+                'id', card_owner.id,
+                'name', card_owner.name,
+                'job', card_owner.job,
+                'profile_picture', card_owner.profile_picture
+              ),
               'members', COALESCE(members_data.members, '[]')
             )
           ) AS cards
-      FROM 
-        cards
-      LEFT JOIN 
-        users AS card_owner ON cards.owner_id = card_owner.id
-      LEFT JOIN LATERAL (
-        SELECT 
-          json_agg(
-            json_build_object(
-              'id', members.id,
-              'name', members.name,
-              'profile_picture', members.profile_picture
-            )
-          ) AS members
         FROM 
-          unnest(cards.members) AS member_id
+          cards
         LEFT JOIN 
-          users AS members ON members.id = member_id
-      ) AS members_data ON true
-      WHERE 
-        cards.board_id = boards.id
+          users AS card_owner ON cards.owner_id = card_owner.id
+        LEFT JOIN LATERAL (
+          SELECT 
+            json_agg(
+              json_build_object(
+                'id', members.id,
+                'name', members.name,
+                'profile_picture', members.profile_picture
+              )
+            ) AS members
+          FROM 
+            unnest(cards.members) AS member_id
+          LEFT JOIN 
+            users AS members ON members.id = member_id
+        ) AS members_data ON true
+        WHERE 
+          cards.board_id = boards.id
       ) AS cards_data ON true;
     `);
 
@@ -80,15 +89,15 @@ export class BoardsDbRepository {
 
   async createBoard({ title, owner_id }) {
     const { rows } = await this.dbClient.query(`
-      INSERT INTO boards
-        (title, owner_id)
-      VALUES
-        ('${title}','${owner_id}')
-      RETURNING id;
-    `);
+      INSERT INTO boards (title, owner_id)
+      VALUES ($1, $2)
+      RETURNING id, title;
+    `, [title, owner_id]);
+
+    const boardData = rows[0];
 
     const board = {
-      id: rows[0].id,
+      id: boardData.id,
       title,
       owner_id,
       cards: [],
@@ -98,16 +107,25 @@ export class BoardsDbRepository {
   }
 
   async updateBoard({ data, board_id }) {
-    const query = concatUpdateQueryValues(data)
+    const { query, fields } = concatUpdateQueryValues(data)
     
-    const { rowCount } = await this.dbClient.query(`
+    let formattedFields = fields;
+
+    formattedFields =
+      !formattedFields.includes('title') ? `${formattedFields}, title` : formattedFields
+
+    const { rows } = await this.dbClient.query(`
       UPDATE boards
       SET ${query}
       WHERE
-        id = '${board_id}';
-    `);
+        id = '${board_id}'
+      RETURNING
+        id, ${formattedFields};
+    `)
 
-    return !!rowCount;
+    const boardData = rows[0];
+
+    return boardData;
   }
 
   async deleteBoard(board_id) {

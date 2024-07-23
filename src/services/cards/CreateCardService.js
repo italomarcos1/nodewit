@@ -5,11 +5,11 @@ export class CreateCardService {
     this.cardsRepository = cardsRepository;
   }
 
-  async execute({ title, description, owner_id, board_id }) {
-    // TODO: no board_id (no caso do quadro ter sido deletado?)
+  async execute({ title, description, deadline, top_priority, owner_id, board_id, members }) {
+    // TODO: validate owner_id e board_id?
     
     const card = await this.cardsRepository.createCard({
-      title, description, owner_id, board_id
+      title, description, deadline, top_priority, owner_id, board_id, members
     })
 
     return { card }

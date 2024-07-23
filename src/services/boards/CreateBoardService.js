@@ -6,6 +6,7 @@ export class CreateBoardService {
   }
 
   async execute({ title, owner_id }) {
+    // TODO: validate owner_id?
     const board = await this.boardsRepository.createBoard({
       title, owner_id
     })

@@ -1,11 +1,14 @@
 export function concatUpdateQueryValues(obj) {
-  let final = [];
+  let fieldValues = [];
+  let queryValues = [];
   
-  for (const key in obj)
-    final.push(`${key} = '${obj[key]}'`)
+  for (const key in obj) {
+    fieldValues.push(key)
+    queryValues.push(`${key} = '${obj[key]}'`)
+  }
 
-  const query = final.join(", ");
-  console.log("query", query)
+  const fields = fieldValues.join(", ");
+  const query = queryValues.join(", ");
 
-  return query;
+  return { query, fields };
 }

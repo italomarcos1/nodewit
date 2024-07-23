@@ -48,3 +48,9 @@ export class ForbiddenActionError extends Error {
     super("Forbidden action.")
   }
 }
+
+export class UnsupportedFileTypeError extends Error {
+  constructor() {
+    super("The file you provided isn't supported.")
+  }
+}

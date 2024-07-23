@@ -2,14 +2,16 @@ const routes = [
   {
     method: "GET",
     url: "/healthcheck",
-    handler: async (_, res) => res.writeHead(200).end("praise jesus lift weights fuck hoes amirite")
+    handler: async (_, res) =>
+      res
+        .writeHead(200)
+        .end("praise jesus lift weights fuck hoes amirite")
   },
   {
     method: "GET",
     protected: true,
     url: "/connection",
     handler: async (req, res) => {
-      // console.log("res", res)
       const sseHeaders = {
         "Content-Type": "text/event-stream",
         "Connection": "keep-alive",

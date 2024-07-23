@@ -1,6 +1,9 @@
 import { usersController } from "./users.js";
 import { cardsController } from "./cards.js";
 import { boardsController } from "./boards.js";
+import { filesController } from "./files.js";
+// import { flowsController } from "./flows.js";
+import { notificationsController } from "./notifications.js";
 
 export const customRoutes = {
   "GET/healthcheck": {
@@ -14,5 +17,7 @@ export const customRoutes = {
   },
   ...usersController,
   ...boardsController,
-  ...cardsController
+  ...cardsController,
+  ...filesController,
+  ...notificationsController,
 }

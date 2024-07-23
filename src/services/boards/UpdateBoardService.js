@@ -16,14 +16,14 @@ export class UpdateBoardService {
     if (!board)
       throw new ResourceNotFoundError()
 
-    const boardWasUpdated = await this.boardsRepository.updateBoard({
+    const updatedBoard = await this.boardsRepository.updateBoard({
       data,
       board_id
     })
 
-    if (!boardWasUpdated)
-      throw new Error("Error while updating Board")
+    if (!updatedBoard)
+      throw new Error("Error while updating board")
 
-    return boardWasUpdated
+    return updatedBoard
   }
 }

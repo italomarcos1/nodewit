@@ -16,14 +16,14 @@ export class UpdateUserService {
     if (!user)
       throw new ResourceNotFoundError()
 
-    const userWasUpdated = await this.usersRepository.updateUser({
+    const updatedUser = await this.usersRepository.updateUser({
       data,
       user_id
     })
 
-    if (!userWasUpdated)
+    if (!updatedUser)
       throw new Error("Error while updating user")
 
-    return userWasUpdated;
+    return updatedUser;
   }
 }

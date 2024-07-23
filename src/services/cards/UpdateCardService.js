@@ -16,14 +16,14 @@ export class UpdateCardService {
     if (!card)
       throw new ResourceNotFoundError()
 
-    const cardWasUpdated = await this.cardsRepository.updateCard({
+    const updatedCard = await this.cardsRepository.updateCard({
       data,
       card_id
     })
 
-    if (!cardWasUpdated)
+    if (!updatedCard)
       throw new Error("Error while updating card")
 
-    return cardWasUpdated
+    return updatedCard
   }
 }
